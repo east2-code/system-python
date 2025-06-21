@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>软件授权管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .navbar { box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
+        .card { border: none; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); border-radius: 12px; margin-bottom: 20px; }
+        .card-header { background: linear-gradient(135deg, #3498db, #2980b9); color: white; border-top-left-radius: 12px !important; border-top-right-radius: 12px !important; padding: 15px 20px; }
+        .license-card { transition: all 0.3s ease; background: #fff; border-radius: 10px; overflow: hidden; border: 1px solid #e9ecef; }
+        .license-card:hover { transform: translateY(-7px); box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12); }
+        .badge-expired { background-color: #e74c3c; }
+        .badge-active { background-color: #2ecc71; }
+        .badge-inactive { background-color: #95a5a6; }
+        .history-entry { border-left: 4px solid #3498db; padding-left: 16px; margin-bottom: 18px; }
+        .form-control:focus, .form-select:focus { box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25); border-color: #3498db; }
+        .btn-primary { background: linear-gradient(135deg, #3498db, #2980b9); border: none; }
+        .btn-primary:hover { background: linear-gradient(135deg, #2980b9, #2573a7); }
+        .btn-danger { background: linear-gradient(135deg, #e74c3c, #c0392b); border: none; }
+        .btn-success { background: linear-gradient(135deg, #2ecc71, #27ae60); border: none; }
+        .section-title { font-size: 1.25rem; font-weight: 600; color: #2c3e50; margin-bottom: 1rem; border-bottom: 2px solid #3498db; padding-bottom: 0.5rem; }
+        .alert-container { position: fixed; top: 20px; right: 20px; z-index: 1050; max-width: 400px; }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.8); z-index: 1100; display: flex; justify-content: center; align-items: center; }
+        .server-info { position: fixed; bottom: 10px; left: 10px; background: rgba(255, 255, 255, 0.9); padding: 5px 10px; border-radius: 5px; font-size: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <div id="loadingOverlay" class="loading-overlay d-none">
+        <div class="text-center">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">加载中...</span>
+            </div>
+            <p class="mt-3">处理中，请稍候...</p>
+        </div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <i class="bi bi-shield-lock me-2 fs-4"></i>
+                <strong class="fs-4">软件授权管理系统</strong>
+            </a>
+        </div>
+    </nav>
+
+    <div class="container mt-4 mb-5">
+        <!-- 操作提示区域 -->
+        <div class="alert-container" id="alertContainer"></div>
+        
+        <div class="row">
+            <div class="col-lg-4">
+                <!-- 软件管理卡片 -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-app-indicator me-2"></i>软件管理</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="createSoftwareForm" novalidate>
+                            <div class="mb-3">
+                                <label for="softwareName" class="form-label">软件名称 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="softwareName" name="name" required>
+                                <div class="invalid-feedback">请输入软件名称</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="softwareVersion" class="form-label">版本号 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="softwareVersion" name="version" required>
+                                <div class="invalid-feedback">请输入版本号</div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-plus-circle me-2"></i>添加新软件
+                            </button>
+                        </form>
+                        
+                        <div class="mt-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0">软件列表</h6>
+                                <button class="btn btn-sm btn-outline-primary" onclick="refreshSoftwareList()">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </div>
+                            <div id="softwareList" class="list-group">
+                                <!-- 软件列表将通过JS动态加载 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 创建授权卡片 -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-key me-2"></i>创建新授权</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="createLicenseForm" novalidate>
+                            <div class="mb-3">
+                                <label for="username" class="form-label">用户名 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                                <div class="invalid-feedback">请输入用户名</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">邮箱</label>
+                                <input type="email" class="form-control" id="email" name="email">
+                            </div>
+                            <div class="mb-3">
+                                <label for="company" class="form-label">公司</label>
+                                <input type="text" class="form-control" id="company" name="company">
+                            </div>
+                            <div class="mb-3">
+                                <label for="software_name" class="form-label">软件 <span class="text-danger">*</span></label>
+                                <select class="form-select" id="software_name" name="software_name" required>
+                                    <option value="">-- 加载软件列表 --</option>
+                                </select>
+                                <div class="invalid-feedback">请选择软件</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="hardware_id" class="form-label">硬件ID <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="hardware_id" name="hardware_id" required>
+                                <div class="invalid-feedback">请输入硬件ID</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="session_id" class="form-label">会话ID (可选)</label>
+                                <input type="text" class="form-control" id="session_id" name="session_id">
+                            </div>
+                            <div class="mb-3">
+                                <label for="expiry_days" class="form-label">有效期 (天) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="expiry_days" name="expiry_days" value="365" min="1" required>
+                                <div class="invalid-feedback">请输入有效期</div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-key me-2"></i>生成授权码
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <!-- 授权管理区域 -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-list-check me-2"></i>授权管理</h5>
+                        <div class="d-flex">
+                            <select class="form-select form-select-sm me-2" id="filterStatus" onchange="filterLicenses()">
+                                <option value="all">所有状态</option>
+                                <option value="active">激活</option>
+                                <option value="expired">过期</option>
+                                <option value="inactive">未激活</option>
+                            </select>
+                            <div class="input-group input-group-sm">
+                                <input type="text" class="form-control" id="globalSearch" placeholder="搜索用户名或授权码">
+                                <button class="btn btn-primary" type="button" onclick="globalSearch()">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="licenseList" class="row g-4">
+                            <div class="col-12 text-center py-5">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p class="mt-3">加载授权记录中...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 历史记录区域 -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>操作历史</h5>
+                    </div>
+                    <div class="card-body" id="historyPanel" style="min-height: 300px;">
+                        <p class="text-muted text-center py-5">
+                            <i class="bi bi-info-circle fs-4 d-block mb-2"></i>
+                            选择授权查看历史记录
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 服务器信息 -->
+    <div class="server-info" id="serverInfo">
+        <i class="bi bi-server"></i> 服务器: <span id="serverAddress">加载中...</span>
+    </div>
+
+    <!-- 授权详情模态框 -->
+    <div class="modal fade" id="licenseDetailModal" tabindex="-1", aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">授权详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">用户名</label>
+                                <p id="detailUsername" class="form-control-plaintext fw-medium text-primary"></p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">软件</label>
+                                <p id="detailSoftware" class="form-control-plaintext fw-medium text-primary"></p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">硬件ID</label>
+                                <p id="detailHardwareId" class="form-control-plaintext text-truncate font-monospace"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">授权码</label>
+                                <p id="detailLicenseKey" class="form-control-plaintext font-monospace fw-bold text-success"></p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">创建时间</label>
+                                <p id="detailCreated" class="form-control-plaintext"></p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">到期时间</label>
+                                <p id="detailExpires" class="form-control-plaintext"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">状态</label>
+                        <p id="detailStatus" class="form-control-plaintext"></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x me-2"></i>关闭
+                    </button>
+                    <button type="button" class="btn btn-danger" id="deactivateBtn">
+                        <i class="bi bi-toggle2-off me-2"></i>停用授权
+                    </button>
+                    <button type="button" class="btn btn-success" id="renewBtn">
+                        <i class="bi bi-arrow-clockwise me-2"></i>续期授权
+                    </button>
+                    <button type="button" class="btn btn-danger" id="deleteBtn">
+                        <i class="bi bi-trash me-2"></i>删除授权
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 显示加载覆盖层
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.remove('d-none');
+        }
+        
+        // 隐藏加载覆盖层
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('d-none');
+        }
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initFormValidation();
+            loadSoftwareList();
+            refreshSoftwareList();
+            loadAllLicenses(); // 加载所有授权记录
+            fetchServerInfo(); // 获取服务器信息
+        });
+
+        // 初始化表单验证
+        function initFormValidation() {
+            const forms = ['createLicenseForm', 'createSoftwareForm'];
+            forms.forEach(formId => {
+                const form = document.getElementById(formId);
+                if (form) {
+                    form.addEventListener('submit', function(event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                }
+            });
+        }
+
+        // 加载所有授权记录
+        async function loadAllLicenses() {
+            try {
+                showLoading();
+                const response = await fetch('/api/all-licenses');
+                if (!response.ok) throw new Error('获取授权记录失败');
+                
+                const data = await response.json();
+                displayLicenses(data);
+            } catch (error) {
+                document.getElementById('licenseList').innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <i class="bi bi-exclamation-circle text-muted fs-1 mb-3"></i>
+                        <p class="text-muted">${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 加载软件列表到下拉菜单
+        async function loadSoftwareList() {
+            try {
+                showLoading();
+                const response = await fetch('/api/software');
+                if (!response.ok) throw new Error('获取软件列表失败');
+                
+                const data = await response.json();
+                const select = document.getElementById('software_name');
+                select.innerHTML = '<option value="">-- 选择软件 --</option>';
+                
+                data.software.forEach(sw => {
+                    const option = document.createElement('option');
+                    option.value = sw.name;
+                    option.textContent = `${sw.name} (${sw.version})`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                showAlert('danger', '获取软件列表失败: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 刷新软件列表
+        async function refreshSoftwareList() {
+            const softwareList = document.getElementById('softwareList');
+            softwareList.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
+            
+            try {
+                showLoading();
+                const response = await fetch('/api/software');
+                if (!response.ok) throw new Error('获取软件列表失败');
+                
+                const data = await response.json();
+                
+                if (data.software.length === 0) {
+                    softwareList.innerHTML = '<div class="text-center py-4"><p class="text-muted">暂无软件记录</p></div>';
+                    return;
+                }
+                
+                let html = '';
+                data.software.forEach(sw => {
+                    html += `
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">${sw.name}</h6>
+                            <small class="text-muted">版本: ${sw.version}</small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteSoftware(${sw.id})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                    `;
+                });
+                
+                softwareList.innerHTML = html;
+            } catch (error) {
+                softwareList.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 创建软件
+        document.getElementById('createSoftwareForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!e.target.checkValidity()) return;
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            
+            try {
+                showLoading();
+                const response = await fetch('/api/software', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                if (response.status === 201) {
+                    showAlert('success', `软件 "${data.name}" 创建成功`);
+                    e.target.reset();
+                    e.target.classList.remove('was-validated');
+                    refreshSoftwareList();
+                    loadSoftwareList(); // 刷新下拉菜单
+                } else {
+                    throw new Error(result.error || '创建软件失败');
+                }
+            } catch (error) {
+                showAlert('danger', '错误: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // 删除软件
+        async function deleteSoftware(softwareId) {
+            if (!confirm('确定要删除此软件吗？此操作不可恢复！')) return;
+            
+            try {
+                showLoading();
+                const response = await fetch(`/api/software/${softwareId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showAlert('success', '软件已成功删除');
+                    refreshSoftwareList();
+                    loadSoftwareList(); // 刷新下拉菜单
+                } else {
+                    const result = await response.json();
+                    throw new Error(result.error || '删除失败');
+                }
+            } catch (error) {
+                showAlert('danger', '错误: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 创建授权
+        document.getElementById('createLicenseForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!e.target.checkValidity()) return;
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            
+            try {
+                showLoading();
+                const response = await fetch('/api/licenses', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                if (response.status === 201) {
+                    // 格式化日期
+                    const expiresDate = new Date(result.expires_at);
+                    const formattedDate = expiresDate.toLocaleDateString('zh-CN', { 
+                        year: 'numeric', month: 'long', day: 'numeric' 
+                    });
+                    
+                    // 显示成功提示
+                    showAlert('success', `授权创建成功！授权码: ${result.license_key}`);
+                    
+                    // 重置表单
+                    e.target.reset();
+                    e.target.classList.remove('was-validated');
+                    
+                    // 重新加载所有授权记录
+                    loadAllLicenses();
+                } else {
+                    throw new Error(result.error || '创建授权失败');
+                }
+            } catch (error) {
+                showAlert('danger', '错误: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // 全局搜索
+        async function globalSearch() {
+            const searchTerm = document.getElementById('globalSearch').value.trim();
+            if (!searchTerm) {
+                showAlert('info', '请输入用户名或授权码进行搜索');
+                return;
+            }
+            
+            document.getElementById('licenseList').innerHTML = '<div class="col-12 text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-3">搜索中...</p></div>';
+            
+            try {
+                showLoading();
+                // 先尝试按用户名搜索
+                let response = await fetch(`/api/licenses/${searchTerm}`);
+                if (response.ok) {
+                    const result = await response.json();
+                    displayLicenses(result);
+                    return;
+                }
+                
+                // 如果用户名搜索失败，尝试按授权码搜索
+                response = await fetch(`/api/license-by-key/${searchTerm}`);
+                if (response.ok) {
+                    const result = await response.json();
+                    displayLicenses({
+                        licenses: [result]
+                    });
+                } else {
+                    throw new Error('未找到匹配的授权记录');
+                }
+            } catch (error) {
+                document.getElementById('licenseList').innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <i class="bi bi-search text-muted fs-1 mb-3"></i>
+                        <p class="text-muted">${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 显示授权列表
+        function displayLicenses(data) {
+            const licenseList = document.getElementById('licenseList');
+            
+            if (!data.licenses || data.licenses.length === 0) {
+                licenseList.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <i class="bi bi-exclamation-circle text-muted fs-1 mb-3"></i>
+                        <p class="text-muted">未找到授权记录</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            data.licenses.forEach(license => {
+                // 正确计算状态
+                const now = new Date();
+                const expiresDate = new Date(license.expires_at);
+                const isExpired = now > expiresDate;
+                
+                let statusClass, statusText;
+                if (!license.is_active) {
+                    statusClass = 'badge-inactive';
+                    statusText = '已停用';
+                } else if (isExpired) {
+                    statusClass = 'badge-expired';
+                    statusText = '已过期';
+                } else {
+                    statusClass = 'badge-active';
+                    statusText = '激活中';
+                }
+                
+                // 正确计算剩余天数
+                const timeDiff = expiresDate - now;
+                const daysRemaining = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+                const daysText = daysRemaining > 0 ? 
+                    `<span class="text-success">剩余 ${daysRemaining} 天</span>` : 
+                    '<span class="text-danger">已过期</span>';
+                
+                html += `
+                <div class="col-md-6">
+                    <div class="card license-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title mb-0">${license.software}</h5>
+                                <span class="badge ${statusClass}">${statusText}</span>
+                            </div>
+                            <p class="card-text text-muted small mb-2">
+                                <i class="bi bi-key me-1"></i> ${license.license_key}
+                            </p>
+                            <p class="card-text mb-1">
+                                <i class="bi bi-person me-2"></i> ${license.username}
+                                <span class="ms-3"><i class="bi bi-calendar me-2"></i> ${daysText}</span>
+                            </p>
+                            <p class="card-text small mb-3">
+                                <i class="bi bi-cpu me-2"></i> ${license.hardware_id}
+                                ${license.session_id ? `<br><i class="bi bi-code me-2"></i> ${license.session_id}` : ''}
+                            </p>
+                            <div class="d-flex justify-content-between">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewLicenseDetails(${license.id})">
+                                    <i class="bi bi-eye me-1"></i> 详情
+                                </button>
+                                <button class="btn btn-sm btn-outline-info" onclick="viewLicenseHistory(${license.id})">
+                                    <i class="bi bi-clock-history me-1"></i> 历史
+                                </button>
+                                ${license.is_active && daysRemaining <= 30 ? 
+                                    `<button class="btn btn-sm btn-warning" onclick="renewLicense(${license.id})">
+                                        <i class="bi bi-arrow-repeat me-1"></i> 续期
+                                    </button>` : ''
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+            });
+            
+            licenseList.innerHTML = html;
+        }
+
+        // 查看授权详情
+        async function viewLicenseDetails(licenseId) {
+            try {
+                showLoading();
+                const response = await fetch(`/api/license-detail/${licenseId}`);
+                if (!response.ok) throw new Error('获取授权详情失败');
+                
+                const license = await response.json();
+                
+                // 填充模态框
+                document.getElementById('detailUsername').textContent = license.user.username;
+                document.getElementById('detailSoftware').textContent = `${license.software.name} (${license.software.version})`;
+                document.getElementById('detailHardwareId').textContent = license.hardware_id;
+                document.getElementById('detailLicenseKey').textContent = license.license_key;
+                
+                // 格式化日期
+                const createdDate = new Date(license.generated_at);
+                const expiresDate = new Date(license.expires_at);
+                
+                document.getElementById('detailCreated').textContent = createdDate.toLocaleString('zh-CN', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                document.getElementById('detailExpires').textContent = expiresDate.toLocaleString('zh-CN', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                // 设置状态
+                let statusText = '';
+                if (!license.is_active) {
+                    statusText = '<span class="badge bg-secondary">已停用</span>';
+                } else if (new Date() > expiresDate) {
+                    statusText = '<span class="badge bg-danger">已过期</span>';
+                } else {
+                    const daysLeft = Math.ceil((expiresDate - new Date()) / (1000 * 60 * 60 * 24));
+                    statusText = `<span class="badge bg-success">激活中 (剩余 ${daysLeft} 天)</span>`;
+                }
+                document.getElementById('detailStatus').innerHTML = statusText;
+                
+                // 设置按钮事件
+                document.getElementById('deactivateBtn').onclick = () => deactivateLicense(licenseId);
+                document.getElementById('renewBtn').onclick = () => renewLicense(licenseId);
+                document.getElementById('deleteBtn').onclick = () => deleteLicense(licenseId);
+                
+                // 显示模态框
+                const modal = new bootstrap.Modal(document.getElementById('licenseDetailModal'));
+                modal.show();
+                
+            } catch (error) {
+                showAlert('danger', '获取授权详情失败: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 查看授权历史
+        async function viewLicenseHistory(licenseId) {
+            try {
+                showLoading();
+                const response = await fetch(`/api/licenses/history/${licenseId}`);
+                if (!response.ok) throw new Error('获取历史记录失败');
+                
+                const history = await response.json();
+                const historyPanel = document.getElementById('historyPanel');
+                
+                if (history.history.length === 0) {
+                    historyPanel.innerHTML = '<div class="text-center py-5"><p class="text-muted">无操作历史记录</p></div>';
+                    return;
+                }
+                
+                let html = '<div class="row">';
+                history.history.forEach(record => {
+                    const actionClass = record.action === "CREATED" ? "text-success" : 
+                                      record.action === "RENEWED" ? "text-primary" : 
+                                      record.action === "DEACTIVATED" ? "text-danger" : "text-muted";
+                    
+                    const actionIcon = record.action === "CREATED" ? "bi-plus-circle" : 
+                                     record.action === "RENEWED" ? "bi-arrow-repeat" : 
+                                     record.action === "DEACTIVATED" ? "bi-x-circle" : "bi-info-circle";
+                    
+                    const performedDate = new Date(record.performed_at);
+                    
+                    html += `
+                    <div class="col-12 history-entry">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-medium ${actionClass}">
+                                <i class="bi ${actionIcon} me-2"></i>${record.action}
+                            </span>
+                            <span class="text-muted small">${performedDate.toLocaleString('zh-CN', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            })}</span>
+                        </div>
+                        <div class="text-muted ps-4">${record.details || '无详情'}</div>
+                    </div>
+                    `;
+                });
+                
+                html += '</div>';
+                historyPanel.innerHTML = html;
+            } catch (error) {
+                historyPanel.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 续期授权
+        async function renewLicense(licenseId) {
+            const licenseElement = document.getElementById('detailLicenseKey');
+            if (!licenseElement) return;
+            
+            const currentLicenseKey = licenseElement.textContent;
+            const currentSoftware = document.getElementById('detailSoftware').textContent;
+            const days = prompt(`为 "${currentSoftware}" 续期多少天？`, '365');
+            
+            if (!days || isNaN(days) || parseInt(days) < 1) {
+                showAlert('warning', '请输入有效的天数');
+                return;
+            }
+            
+            if (!confirm(`确定为 "${currentSoftware}" 生成新授权码吗？\n原授权码: ${currentLicenseKey}`)) return;
+            
+            try {
+                showLoading();
+                const response = await fetch(`/api/licenses/renew/${licenseId}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ expiry_days: parseInt(days) })
+                });
+                
+                const result = await response.json();
+                if (response.ok) {
+                    // 格式化日期
+                    const expiresDate = new Date(result.expires_at);
+                    const formattedDate = expiresDate.toLocaleDateString('zh-CN', { 
+                        year: 'numeric', month: 'long', day: 'numeric' 
+                    });
+                    
+                    showAlert('success', `授权续期成功！新授权码: ${result.new_license_key}`);
+                    
+                    // 刷新列表并关闭模态框
+                    loadAllLicenses();
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('licenseDetailModal'));
+                    if (modal) modal.hide();
+                } else {
+                    throw new Error(result.error || '续期失败');
+                }
+            } catch (error) {
+                showAlert('danger', '错误: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 停用授权
+        async function deactivateLicense(licenseId) {
+            const licenseElement = document.getElementById('detailLicenseKey');
+            if (!licenseElement) return;
+            
+            const licenseKey = licenseElement.textContent;
+            const software = document.getElementById('detailSoftware').textContent;
+            
+            if (!confirm(`确定要停用 "${software}" 的授权吗？\n授权码: ${licenseKey}`)) return;
+            
+            try {
+                showLoading();
+                const response = await fetch(`/api/licenses/deactivate/${licenseId}`, {
+                    method: 'PUT'
+                });
+                
+                if (response.ok) {
+                    showAlert('success', '授权已成功停用！');
+                    
+                    // 刷新列表并关闭模态框
+                    loadAllLicenses();
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('licenseDetailModal'));
+                    if (modal) modal.hide();
+                } else {
+                    const result = await response.json();
+                    throw new Error(result.error || '停用失败');
+                }
+            } catch (error) {
+                showAlert('danger', '错误: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 删除授权
+        async function deleteLicense(licenseId) {
+            if (!confirm('确定要永久删除此授权吗？此操作不可撤销！')) return;
+            
+            try {
+                showLoading();
+                const response = await fetch(`/api/licenses/${licenseId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showAlert('success', '授权已成功删除！');
+                    // 刷新列表并关闭模态框
+                    loadAllLicenses();
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('licenseDetailModal'));
+                    if (modal) modal.hide();
+                } else {
+                    const result = await response.json();
+                    throw new Error(result.error || '删除失败');
+                }
+            } catch (error) {
+                showAlert('danger', '错误: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 显示提示信息
+        function showAlert(type, message) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertId = 'alert-' + Date.now();
+            
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.role = 'alert';
+            alert.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            
+            alertContainer.appendChild(alert);
+            
+            // 5秒后自动关闭
+            setTimeout(() => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }, 5000);
+        }
+
+        // 获取服务器信息
+        async function fetchServerInfo() {
+            try {
+                const response = await fetch('/api/server-info');
+                if (!response.ok) throw new Error('获取服务器信息失败');
+                
+                const data = await response.json();
+                document.getElementById('serverAddress').textContent = `${data.ip}:${data.port}`;
+            } catch (error) {
+                document.getElementById('serverAddress').textContent = '未知';
+            }
+        }
+    </script>
+</body>
+</html>
