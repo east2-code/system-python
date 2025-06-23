@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>授权管理系统</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        html, body {
+            height: 100%;
+        }
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #191d2b 0%, #353b60 60%, #4cc9f0 100%);
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            color: #f9fafb;
+        }
+        .dashboard-header {
+            background: linear-gradient(120deg,#353b60 10%, #4361ee 80%);
+            color: #ffe066;
+            padding: 1.15rem 0 0.7rem 0;
+            margin-bottom: 2.2rem;
+            box-shadow: 0 4px 18px 0 rgba(0,0,0,0.18);
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .dashboard-header .admin-info {
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            background: rgba(76,201,240,0.18);
+            border-radius: 18px;
+            padding: 0.32rem 1rem;
+            margin-left: 1rem;
+            color: #ffe066;
+        }
+        .dashboard-header .logout-btn {
+            background: rgba(255,255,255,0.13);
+            color: #ffe066;
+            border: none;
+            border-radius: 16px;
+            padding: 0.4rem 1rem;
+            font-weight: 600;
+            transition: background 0.22s, color 0.22s;
+            margin-left: 1.3rem;
+        }
+        .dashboard-header .logout-btn:hover {
+            background: rgba(255,255,255,0.28);
+            color: #fff;
+        }
+        .card {
+            border-radius: 18px;
+            background: rgba(40, 48, 80, 0.98);
+            box-shadow: 0 8px 24px 0 rgba(51,56,110,0.16);
+            border: none;
+            margin-bottom: 1.7rem;
+            transition: box-shadow 0.28s, transform 0.22s;
+        }
+        .card:hover {
+            box-shadow: 0 14px 36px 0 rgba(51,56,110,0.22);
+            transform: translateY(-2px) scale(1.01);
+        }
+        .card-header {
+            background: transparent;
+            border-bottom: 1px solid rgba(255,255,255,0.14);
+            font-weight: 700;
+            padding: 1rem 1.5rem;
+            border-radius: 18px 18px 0 0 !important;
+            color: #ffe066;
+            font-size: 1.22rem;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 10px #222c;
+        }
+        /* 增强已注册软件标题可读性 */
+        .card-body h5,
+        .section-title,
+        .sub-section-title {
+            color: #ffe066 !important;
+            font-weight: bold;
+            font-size: 1.18rem;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 8px #222b;
+        }
+        .sub-section-title {
+            color: #4cc9f0 !important;
+        }
+        /* 表格优化 */
+        .table th {
+            background: #23284f !important;
+            color: #ffe066 !important;
+            font-size: 1.08rem;
+            font-weight: bold;
+            border-bottom: 2px solid #4cc9f0;
+        }
+        .table td, .table tbody tr td {
+            color: #f9fafb !important;
+            font-size: 1.06rem;
+            font-weight: 500;
+            background: transparent;
+            text-shadow: 0 1px 6px #000a;
+        }
+        .table-hover tbody tr:hover {
+            background-color: rgba(67, 97, 238, 0.18);
+        }
+        /* 授权详情优化 */
+        .card .card-body p,
+        .card .card-body strong,
+        .card .card-body span,
+        .card .card-body {
+            color: #fff !important;
+            font-weight: 500;
+            text-shadow: 0 1px 3px #222b;
+        }
+        /* 分页优化 */
+        #pagination-info {
+            color: #ffe066 !important;
+            font-weight: bold;
+            font-size: 1.07rem;
+            letter-spacing: 1px;
+            text-shadow: 0 1px 3px #222b;
+        }
+        .pagination .page-link {
+            border-radius: 10px;
+            margin: 0 2px;
+            background: rgba(76,201,240,0.11);
+            color: #ffe066;
+            border: none;
+            font-weight: 600;
+        }
+        .pagination .page-item.active .page-link {
+            background: linear-gradient(120deg,#ffe066 0%, #4361ee 100%);
+            color: #23284f !important;
+        }
+        .pagination .page-link:focus {
+            box-shadow: 0 0 0 2px #ffe06677;
+        }
+        /* 其它优化 */
+        .form-control, .form-select {
+            border-radius: 12px;
+            padding: 0.65rem 1rem;
+            border: 1px solid #4cc9f0;
+            background: rgba(255,255,255,0.11);
+            color: #fff;
+            font-weight: 500;
+            font-size: 1.05rem;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #ffe066;
+            box-shadow: 0 0 0 3px rgba(255,224,102,0.16);
+            background: #21273e;
+            color: #fff;
+        }
+        .form-control::placeholder {
+            color: #f9fafb !important;
+            opacity: 0.7;
+            font-weight: 400;
+        }
+        .btn-primary, .btn-outline-primary {
+            border-radius: 12px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            background: linear-gradient(120deg,#4361ee 0%, #ffe066 100%);
+            border: none;
+            color: #23284f !important;
+            transition: filter 0.18s, color 0.18s;
+        }
+        .btn-primary:hover, .btn-outline-primary:hover {
+            filter: brightness(1.13);
+            color: #191d2b !important;
+        }
+        .btn-outline-primary {
+            background: transparent;
+            border: 2px solid #ffe066;
+            color: #ffe066 !important;
+        }
+        .btn-outline-primary:focus, .btn-outline-primary:active {
+            background: #ffe066;
+            color: #191d2b !important;
+        }
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin: 0 2px;
+            background: rgba(67,97,238,0.13);
+            color: #ffe066 !important;
+            font-size: 1.15rem;
+        }
+        .action-btn:hover {
+            background: #ffe066;
+            color: #353b60 !important;
+        }
+        .status-badge {
+            padding: 0.45rem 1rem;
+            border-radius: 22px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            font-size: 1rem;
+        }
+        .status-active {
+            background: rgba(76, 201, 240, 0.30);
+            color: #ffe066;
+        }
+        .status-inactive {
+            background: rgba(220, 53, 69, 0.24);
+            color: #ffd6d6;
+        }
+        .status-expired {
+            background: rgba(253, 126, 20, 0.23);
+            color: #fff0d2;
+        }
+        .copy-btn {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .copy-btn:hover {
+            color: #ffe066 !important;
+        }
+        .license-key {
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #ffe066;
+            font-size: 1.1rem;
+        }
+        .alert {
+            border-radius: 15px;
+            font-weight: 600;
+            font-size: 1.07rem;
+        }
+        .alert-danger { background: #5d1a1a; color:#ffe1e1; border:1px solid #bb5050; }
+        .alert-success { background: #214c2e; color:#d4ffd7; border:1px solid #5fc979; }
+        .alert-info { background: #1b3754; color:#e8f2ff; border:1px solid #4cc9f0; }
+        .alert-warning { background: #796006; color:#fffbe2; border:1px solid #ffe066; }
+        .table-container {
+            overflow-x: auto;
+            border-radius: 14px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            background: rgba(67,97,238,0.05);
+        }
+        .search-input {
+            background: rgba(255,255,255,0.12);
+            color: #ffe066;
+            border-radius: 10px;
+            border: 1.5px solid #ffe066;
+        }
+        .search-input:focus {
+            background: #23284f;
+            color: #ffe066;
+        }
+        .modal-content {
+            background: #21273e;
+            color: #ffe066;
+            border-radius: 18px;
+        }
+        .modal-header {
+            border-bottom: 1px solid #4cc9f0;
+        }
+        .modal-footer {
+            border-top: 1px solid #4cc9f0;
+        }
+        .badge {
+            font-size: 1rem;
+            border-radius: 10px;
+        }
+        .stats-card {
+            background: linear-gradient(135deg,#4361ee 0,#ffe066 100%);
+            color: #23284f;
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31,38,135,0.15);
+            margin-bottom: 1.2rem;
+            transition: box-shadow 0.22s, transform 0.18s;
+        }
+        .stats-card:hover {
+            box-shadow: 0 16px 40px 0 rgba(31,38,135,0.22);
+            transform: scale(1.035);
+        }
+        .stats-card .card-title {
+            color: #23284f !important;
+            letter-spacing: 1px;
+        }
+        .stats-card h2 {
+            font-weight: 900;
+            font-size: 2.7rem;
+            color: #23284f !important;
+        }
+        .form-label, .modal-title, .card-title, .card-header {
+            color: #ffe066 !important;
+            font-weight: 600;
+        }
+        .form-label { font-size: 1.04rem; }
+        .spinner-border, .spinner-grow { color: #ffe066 !important; }
+        @media (max-width: 768px) {
+            .dashboard-header {
+                padding: 0.6rem 0 0.4rem 0;
+                margin-bottom: 1rem;
+            }
+            .card {
+                margin-bottom: 1.2rem;
+            }
+            .form-label, .card-header, .modal-title, .card-title { font-size: 1rem; }
+            .stats-card h2 { font-size: 2rem; }
+            .table th, .table td { font-size: 0.98rem; }
+            #pagination-info { font-size: 0.99rem; }
+        }
+    </style>
+</head>
+<body>
+    <header class="dashboard-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-shield-lock me-2"></i>授权管理系统
+                </h1>
+                <div class="d-flex align-items-center">
+                    <span class="admin-info">
+                        <i class="bi bi-person-circle me-1"></i>{{ admin_username or "管理员" }}
+                    </span>
+                    <a href="/logout" class="logout-btn ms-3">
+                        <i class="bi bi-box-arrow-right me-1"></i>安全退出
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+    <div class="container mb-5">
+        <div id="alert-area"></div>
+        <!-- 软件管理 -->
+        <div class="card mb-4">
+            <div class="card-header d-flex align-items-center">
+                <i class="bi bi-box me-2"></i>软件管理
+            </div>
+            <div class="card-body">
+                <form id="createSoftwareForm" class="row g-3">
+                    <div class="col-md-5">
+                        <label class="form-label">软件名称</label>
+                        <input class="form-control" name="name" required>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label">软件版本</label>
+                        <input class="form-control" name="version" required>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button class="btn btn-primary w-100" type="submit">
+                            <i class="bi bi-plus-lg"></i> 添加
+                        </button>
+                    </div>
+                </form>
+                <div class="mt-4">
+                    <h5 class="mb-3">已注册软件</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>名称</th>
+                                    <th>版本</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="softwareList"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 统计卡片 -->
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-muted">总授权数</h5>
+                        <h2 class="mb-0" id="total-licenses">0</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-muted">激活授权</h5>
+                        <h2 class="mb-0 text-success" id="active-licenses">0</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-muted">即将到期</h5>
+                        <h2 class="mb-0 text-warning" id="expiring-licenses">0</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-muted">软件数量</h5>
+                        <h2 class="mb-0 text-info" id="total-software">0</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 创建授权表单 -->
+        <div class="card mb-4">
+            <div class="card-header d-flex align-items-center">
+                <i class="bi bi-plus-circle me-2"></i>创建新授权
+            </div>
+            <div class="card-body">
+                <form id="createLicenseForm" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">用户名</label>
+                        <input class="form-control" name="username" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">邮箱（可选）</label>
+                        <input class="form-control" name="email" type="email" placeholder="example@domain.com">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">公司（可选）</label>
+                        <input class="form-control" name="company" type="text" placeholder="公司名称">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">软件名称</label>
+                        <select class="form-select" name="software_name" id="softwareSelect" required>
+                            <option value="">选择软件...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">硬件ID</label>
+                        <input class="form-control" name="hardware_id" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">到期天数</label>
+                        <input class="form-control" name="expiry_days" type="number" value="365" min="1" required>
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end">
+                        <button class="btn btn-primary w-100" type="submit">
+                            <i class="bi bi-check-lg"></i> 创建
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+        <!-- 授权列表 -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="bi bi-list-check me-2"></i>授权列表
+                </div>
+                <div class="d-flex">
+                    <div class="search-container me-2">
+                        <i class="bi bi-search search-icon"></i>
+                        <input id="globalSearch" type="text" class="form-control search-input" 
+                               placeholder="搜索用户名或授权码...">
+                    </div>
+                    <button class="btn btn-outline-primary" onclick="loadAllLicenses()">
+                        <i class="bi bi-arrow-repeat"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-container">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>用户名</th>
+                                <th>软件</th>
+                                <th>硬件ID</th>
+                                <th>授权码</th>
+                                <th>创建时间</th>
+                                <th>到期时间</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="licenseList"></tbody>
+                    </table>
+                </div>
+                <div class="d-flex justify-content-between align-items-center p-3 border-top">
+                    <div id="pagination-info"></div>
+                    <nav>
+                        <ul class="pagination mb-0" id="pagination"></ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 授权测试弹窗 -->
+    <div class="modal fade" id="testModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-key me-2"></i>测试授权码</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="testForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">硬件ID</label>
+                            <input type="text" class="form-control" id="testHwId" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">授权码</label>
+                            <input type="text" class="form-control" id="testLicenseKey" required>
+                        </div>
+                        <div id="testResult" class="alert d-none"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">测试</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- 续期模态框 -->
+    <div class="modal fade" id="renewModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">续期授权</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">续期天数</label>
+                        <input type="number" id="renewDays" class="form-control" value="365" min="1">
+                    </div>
+                    <input type="hidden" id="renewLicenseId">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="submitRenew()">确认续期</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 详情模态框 -->
+    <div class="modal fade" id="detailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">授权详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="licenseDetail"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 状态管理
+        let currentPage = 1;
+        let totalPages = 1;
+        let totalItems = 0;
+        const perPage = 20;
+        const alertArea = document.getElementById('alert-area');
+        const licenseList = document.getElementById('licenseList');
+        const pagination = document.getElementById('pagination');
+        const paginationInfo = document.getElementById('pagination-info');
+        const softwareList = document.getElementById('softwareList');
+
+        // 显示消息
+        function showAlert(type, msg) {
+            alertArea.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show mb-4" role="alert">
+                    ${msg}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+        }
+
+        // 加载软件列表
+        async function loadSoftwareList() {
+            const select = document.getElementById('softwareSelect');
+            try {
+                const resp = await fetch('/api/software');
+                const data = await resp.json();
+                select.innerHTML = '<option value="">选择软件...</option>' +
+                    data.software.map(sw => `<option value="${sw.name}">${sw.name} (${sw.version})</option>`).join('');
+                softwareList.innerHTML = data.software.map(sw => `
+                    <tr>
+                        <td>${sw.name}</td>
+                        <td>${sw.version}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteSoftware(${sw.id})">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+                document.getElementById('total-software').textContent = data.software.length;
+            } catch (e) {
+                select.innerHTML = '<option value="">加载失败，请刷新</option>';
+                showAlert('danger', '加载软件列表失败');
+            }
+        }
+
+        // 更精确的剩余时间描述
+        function formatRemainingTime(expireStr) {
+            if (!expireStr) return '';
+            const now = new Date();
+            const expire = new Date(expireStr);
+            let diff = expire - now;
+            if (diff <= 0) return '已过期';
+            const days = Math.floor(diff / (24 * 60 * 60 * 1000));
+            diff -= days * 24 * 60 * 60 * 1000;
+            const hours = Math.floor(diff / (60 * 60 * 1000));
+            diff -= hours * 60 * 60 * 1000;
+            const minutes = Math.floor(diff / (60 * 1000));
+            let result = [];
+            if (days > 0) result.push(`${days}天`);
+            if (hours > 0) result.push(`${hours}小时`);
+            if (minutes > 0) result.push(`${minutes}分钟`);
+            return "还剩" + result.join('') + "";
+        }
+
+        // 加载授权列表
+        async function loadAllLicenses(page = 1) {
+            licenseList.innerHTML = `
+                <tr>
+                    <td colspan="8">
+                        <div class="spinner-container">
+                            <div class="spinner-border text-primary"></div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            try {
+                const resp = await fetch(`/api/all-licenses?page=${page}`);
+                const data = await resp.json();
+                if (!data.licenses || data.licenses.length === 0) {
+                    licenseList.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-1"></i>
+                                <p class="mt-2">暂无授权记录</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                licenseList.innerHTML = data.licenses.map(lic => {
+                    const statusClass = lic.days_remaining <= 0 ? 'status-expired' :
+                                    lic.is_active ? 'status-active' : 'status-inactive';
+                    const statusText = lic.days_remaining <= 0 ? '已过期' :
+                                    lic.is_active ? '激活中' : '已停用';
+                    return `
+                        <tr>
+                            <td>${lic.username}</td>
+                            <td>${lic.software} v${lic.version}</td>
+                            <td class="text-truncate" style="max-width:150px;" title="${lic.hardware_id}">
+                                ${lic.hardware_id.substring(0, 20)}${lic.hardware_id.length > 20 ? '...' : ''}
+                            </td>
+                            <td>
+                                <span class="license-key copy-btn" title="点击复制" onclick="copyToClipboard('${lic.license_key}')">
+                                    ${lic.license_key.substring(0, 6)}...${lic.license_key.substring(14)}
+                                </span>
+                            </td>
+                            <td>${formatDate(lic.generated_at)}</td>
+                            <td>
+                                ${formatDate(lic.expires_at)}
+                                <div class="text-${lic.days_remaining <= 1 ? 'danger' : 'success'} small">
+                                    ${formatRemainingTime(lic.expires_at)}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="status-badge ${statusClass}">${statusText}</span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary action-btn" title="详情" 
+                                    onclick="showLicenseDetail(${lic.id})">
+                                    <i class="bi bi-info-circle"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-success action-btn" title="续期" 
+                                    onclick="showRenewModal(${lic.id})">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger action-btn" title="删除" 
+                                    onclick="deleteLicense(${lic.id})">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary action-btn" title="测试授权" 
+                                    onclick="showTestModal('${lic.hardware_id}', '${lic.license_key}')">
+                                    <i class="bi bi-key"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+                currentPage = data.page;
+                totalPages = data.total_pages;
+                totalItems = data.total_items;
+                updatePagination();
+                updateStats();
+            } catch (e) {
+                licenseList.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-danger">
+                            <i class="bi bi-exclamation-circle fs-1"></i>
+                            <p class="mt-2">加载授权列表失败</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        function updatePagination() {
+            paginationInfo.textContent = `显示 ${(currentPage - 1) * perPage + 1} - ${Math.min(currentPage * perPage, totalItems)} 条，共 ${totalItems} 条`;
+            let html = '';
+            const maxVisible = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+            if (endPage - startPage < maxVisible - 1) {
+                startPage = Math.max(1, endPage - maxVisible + 1);
+            }
+            if (currentPage > 1) {
+                html += `<li class="page-item">
+                    <a class="page-link" href="#" onclick="loadAllLicenses(${currentPage - 1})">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>`;
+            }
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="loadAllLicenses(${i})">${i}</a>
+                </li>`;
+            }
+            if (currentPage < totalPages) {
+                html += `<li class="page-item">
+                    <a class="page-link" href="#" onclick="loadAllLicenses(${currentPage + 1})">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>`;
+            }
+            pagination.innerHTML = html;
+        }
+        async function updateStats() {
+            try {
+                const resp = await fetch('/api/all-licenses?page=1&per_page=1000');
+                const data = await resp.json();
+                if (!data.licenses) return;
+                const totalLicenses = data.licenses.length;
+                const activeLicenses = data.licenses.filter(l => l.is_active && l.days_remaining > 0).length;
+                const expiringLicenses = data.licenses.filter(l => l.is_active && l.days_remaining > 0 && l.days_remaining <= 30).length;
+                document.getElementById('total-licenses').textContent = totalLicenses;
+                document.getElementById('active-licenses').textContent = activeLicenses;
+                document.getElementById('expiring-licenses').textContent = expiringLicenses;
+            } catch (e) {
+                console.error("更新统计失败", e);
+            }
+        }
+        function formatDate(dtstr) {
+            if (!dtstr) return '';
+            const d = new Date(dtstr);
+            return d.toLocaleString();
+        }
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            showAlert('success', '已复制到剪贴板');
+        }
+        function showRenewModal(id) {
+            document.getElementById('renewLicenseId').value = id;
+            new bootstrap.Modal(document.getElementById('renewModal')).show();
+        }
+        async function submitRenew() {
+            const id = document.getElementById('renewLicenseId').value;
+            const days = document.getElementById('renewDays').value;
+            if (!days || days < 1) {
+                showAlert('danger', '请输入有效的天数');
+                return;
+            }
+            const modal = bootstrap.Modal.getInstance(document.getElementById('renewModal'));
+            try {
+                const resp = await fetch(`/api/licenses/renew/${id}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({expiry_days: days})
+                });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    modal.hide();
+                    showAlert('success', `授权续期成功！新授权码: <b>${data.new_license_key}</b>`);
+                    loadAllLicenses(currentPage);
+                } else {
+                    const error = await resp.json();
+                    showAlert('danger', error.error || '续期失败');
+                }
+            } catch (e) {
+                showAlert('danger', '网络错误，续期失败');
+            }
+        }
+        async function deleteLicense(id) {
+            if (!confirm('确定要删除此授权吗？此操作不可撤销。')) return;
+            try {
+                const resp = await fetch(`/api/licenses/${id}`, {method: 'DELETE'});
+                if (resp.ok) {
+                    showAlert('success', '授权已删除');
+                    loadAllLicenses(currentPage);
+                } else {
+                    const error = await resp.json();
+                    showAlert('danger', error.error || '删除失败');
+                }
+            } catch (e) {
+                showAlert('danger', '网络错误，删除失败');
+            }
+        }
+        async function deactivateLicense(id) {
+            if (!confirm('确定要停用此授权吗？用户将无法继续使用软件。')) return;
+            try {
+                const resp = await fetch(`/api/licenses/deactivate/${id}`, {method: 'PUT'});
+                if (resp.ok) {
+                    showAlert('success', '授权已停用');
+                    loadAllLicenses(currentPage);
+                } else {
+                    const error = await resp.json();
+                    showAlert('danger', error.error || '停用失败');
+                }
+            } catch (e) {
+                showAlert('danger', '网络错误，停用失败');
+            }
+        }
+
+        async function showLicenseDetail(id) {
+            try {
+                const resp = await fetch(`/api/license-detail/${id}`);
+                if (!resp.ok) {
+                    const error = await resp.json();
+                    showAlert('danger', error.error || '获取详情失败');
+                    return;
+                }
+                const license = await resp.json();
+                const now = new Date();
+                const expires = new Date(license.expires_at);
+                const nowMs = now.getTime();
+                const expireMs = expires.getTime();
+                const diff = expires - now;
+                const daysRemaining = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+                // 状态判断逻辑
+                let statusBadge = '';
+                if (expireMs <= nowMs) {
+                    statusBadge = '<span class="badge bg-danger"><i class="bi bi-x-circle"></i> 已过期</span>';
+                } else if (!license.is_active) {
+                    statusBadge = '<span class="badge bg-secondary"><i class="bi bi-pause-circle"></i> 已停用</span>';
+                } else {
+                    statusBadge = '<span class="badge bg-success"><i class="bi bi-check-circle"></i> 激活</span>';
+                }
+                let remainText = (expireMs <= nowMs) ? '已过期' : formatRemainingTime(license.expires_at);
+
+                // 查询历史
+                let historyHtml = '';
+                try {
+                    const histResp = await fetch(`/api/licenses/history/${id}`);
+                    if (histResp.ok) {
+                        const hists = await histResp.json();
+                        if (hists.history && hists.history.length > 0) {
+                            historyHtml = `<h6 class="mt-4">操作历史</h6><ul class="list-group mb-0">` + hists.history.map(h =>
+                                `<li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>${h.action} - ${h.details || ''}</span>
+                                    <span class="text-muted small">${formatDate(h.performed_at)}</span>
+                                </li>`
+                            ).join('') + `</ul>`;
+                        }
+                    }
+                } catch {}
+
+                document.getElementById('licenseDetail').innerHTML = `
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">用户信息</div>
+                                <div class="card-body">
+                                    <p><strong>用户名:</strong> ${license.user.username}</p>
+                                    <p><strong>邮箱:</strong> ${license.user.email || '未提供'}</p>
+                                    <p><strong>公司:</strong> ${license.user.company || '未提供'}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">软件信息</div>
+                                <div class="card-body">
+                                    <p><strong>名称:</strong> ${license.software.name}</p>
+                                    <p><strong>版本:</strong> ${license.software.version}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card mb-4">
+                        <div class="card-header">授权详情</div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <p><strong>硬件ID:</strong> ${license.hardware_id}</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p><strong>会话ID:</strong> ${license.session_id || '未提供'}</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p><strong>授权码:</strong> 
+                                        <span class="license-key">${license.license_key}</span>
+                                        <button class="btn btn-sm btn-outline-secondary ms-2" 
+                                            onclick="copyToClipboard('${license.license_key}')">
+                                            <i class="bi bi-clipboard"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary ms-1"
+                                            onclick="showTestModal('${license.hardware_id}', '${license.license_key}')"
+                                            title="测试授权">
+                                            <i class="bi bi-key"></i>
+                                        </button>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-4">
+                                    <p><strong>创建时间:</strong> ${formatDate(license.generated_at)}</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p><strong>到期时间:</strong> ${formatDate(license.expires_at)}</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p><strong>状态:</strong> 
+                                        ${statusBadge}
+                                        <span class="ms-2 badge ${expireMs <= nowMs ? 'bg-danger' : daysRemaining <= 30 ? 'bg-warning' : 'bg-success'}">
+                                            ${remainText}
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    ${historyHtml}
+                    <div class="d-flex justify-content-end">
+                        <button class="btn btn-danger me-2" onclick="deactivateLicense(${id})">
+                            <i class="bi bi-x-circle"></i> 停用授权
+                        </button>
+                        <button class="btn btn-primary" onclick="showRenewModal(${id})">
+                            <i class="bi bi-arrow-repeat"></i> 续期授权
+                        </button>
+                        <button class="btn btn-outline-secondary ms-2" onclick="showTestModal('${license.hardware_id}', '${license.license_key}')">
+                            <i class="bi bi-key"></i> 测试授权
+                        </button>
+                    </div>
+                `;
+                new bootstrap.Modal(document.getElementById('detailModal')).show();
+            } catch (e) {
+                showAlert('danger', '获取授权详情失败');
+            }
+        }
+
+
+        async function createSoftware() {
+            const form = document.getElementById('createSoftwareForm');
+            const data = {
+                name: form.name.value,
+                version: form.version.value
+            };
+            try {
+                const resp = await fetch('/api/software', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                if (resp.status === 201) {
+                    const result = await resp.json();
+                    showAlert('success', `软件创建成功！名称: <b>${result.name}</b>，版本: <b>${result.version}</b>`);
+                    form.reset();
+                    loadSoftwareList();
+                } else {
+                    const error = await resp.json();
+                    showAlert('danger', error.error || '创建软件失败');
+                }
+            } catch (e) {
+                showAlert('danger', '网络错误，创建软件失败');
+            }
+        }
+        async function deleteSoftware(id) {
+            if (!confirm('确定要删除此软件吗？关联授权将无法管理。')) return;
+            try {
+                const resp = await fetch(`/api/software/${id}`, {method: 'DELETE'});
+                if (resp.ok) {
+                    showAlert('success', '软件已删除');
+                    loadSoftwareList();
+                } else {
+                    const error = await resp.json();
+                    showAlert('danger', error.error || '删除失败');
+                }
+            } catch (e) {
+                showAlert('danger', '网络错误，删除失败');
+            }
+        }
+        async function globalSearch() {
+            const query = document.getElementById('globalSearch').value.trim();
+            if (!query) return;
+            licenseList.innerHTML = `
+                <tr>
+                    <td colspan="8">
+                        <div class="spinner-container">
+                            <div class="spinner-border text-primary"></div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            try {
+                let resp = await fetch(`/api/licenses/${query}`);
+                if (resp.ok) {
+                    let data = await resp.json();
+                    if (data.licenses && data.licenses.length > 0) {
+                        renderSearchResults(data.licenses);
+                        return;
+                    }
+                }
+                resp = await fetch(`/api/license-by-key/${query}`);
+                if (resp.ok) {
+                    data = await resp.json();
+                    renderSearchResults([data]);
+                } else {
+                    showAlert('info', '未找到匹配的授权');
+                    loadAllLicenses();
+                }
+            } catch (e) {
+                showAlert('danger', '搜索失败');
+                loadAllLicenses();
+            }
+        }
+        function renderSearchResults(licenses) {
+            licenseList.innerHTML = licenses.map(lic => {
+                const statusClass = lic.days_remaining <= 0 ? 'status-expired' :
+                                lic.is_active ? 'status-active' : 'status-inactive';
+                const statusText = lic.days_remaining <= 0 ? '已过期' :
+                                lic.is_active ? '激活中' : '已停用';
+                return `
+                    <tr>
+                        <td>${lic.username || lic.user?.username}</td>
+                        <td>${lic.software || lic.software?.name}</td>
+                        <td class="text-truncate" style="max-width:150px;" title="${lic.hardware_id}">
+                            ${lic.hardware_id.substring(0, 20)}${lic.hardware_id.length > 20 ? '...' : ''}
+                        </td>
+                        <td>
+                            <span class="license-key copy-btn" title="点击复制" onclick="copyToClipboard('${lic.license_key}')">
+                                ${lic.license_key.substring(0, 6)}...${lic.license_key.substring(14)}
+                            </span>
+                        </td>
+                        <td>${formatDate(lic.generated_at)}</td>
+                        <td>
+                            ${formatDate(lic.expires_at)}
+                            <div class="text-${lic.days_remaining <= 1 ? 'danger' : 'success'} small">
+                                ${formatRemainingTime(lic.expires_at)}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary action-btn" title="详情" 
+                                onclick="showLicenseDetail(${lic.id})">
+                                <i class="bi bi-info-circle"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-success action-btn" title="续期" 
+                                onclick="showRenewModal(${lic.id})">
+                                <i class="bi bi-arrow-repeat"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger action-btn" title="删除" 
+                                onclick="deleteLicense(${lic.id})">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary action-btn" title="测试授权" 
+                                onclick="showTestModal('${lic.hardware_id}', '${lic.license_key}')">
+                                <i class="bi bi-key"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            paginationInfo.textContent = `找到 ${licenses.length} 条结果`;
+            pagination.innerHTML = '';
+        }
+        // 授权测试功能
+        function showTestModal(hwId='', licenseKey='') {
+            document.getElementById('testHwId').value = hwId || '';
+            document.getElementById('testLicenseKey').value = licenseKey || '';
+            document.getElementById('testResult').classList.add('d-none');
+            new bootstrap.Modal(document.getElementById('testModal')).show();
+        }
+        document.getElementById('testForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const hwId = document.getElementById('testHwId').value.trim();
+            const licenseKey = document.getElementById('testLicenseKey').value.trim();
+            const resultDiv = document.getElementById('testResult');
+            resultDiv.classList.add('d-none');
+            resultDiv.textContent = '';
+            if (!hwId || !licenseKey) {
+                resultDiv.textContent = "请输入硬件ID和授权码";
+                resultDiv.className = "alert alert-warning mt-2";
+                resultDiv.classList.remove('d-none');
+                return;
+            }
+            try {
+                resultDiv.textContent = "正在测试...";
+                resultDiv.className = "alert alert-info mt-2";
+                resultDiv.classList.remove('d-none');
+                const resp = await fetch('/api/validate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({hardware_id: hwId, license_key: licenseKey})
+                });
+                const data = await resp.json();
+                if (resp.ok && data.valid) {
+                    resultDiv.textContent = `✅ 授权有效，用户: ${data.username}，软件: ${data.software}，到期: ${data.expires_at}`;
+                    resultDiv.className = "alert alert-success mt-2";
+                } else {
+                    resultDiv.textContent = "❌ " + (data.error || '授权无效');
+                    resultDiv.className = "alert alert-danger mt-2";
+                }
+            } catch (e) {
+                resultDiv.textContent = "❌ 测试失败";
+                resultDiv.className = "alert alert-danger mt-2";
+            }
+            resultDiv.classList.remove('d-none');
+        };
+        window.onload = function() {
+            loadSoftwareList();
+            loadAllLicenses();
+            document.getElementById('createLicenseForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                const data = Object.fromEntries(formData.entries());
+                try {
+                    const resp = await fetch('/api/licenses', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(data)
+                    });
+                    if (resp.status === 201) {
+                        const result = await resp.json();
+                        showAlert('success', `授权创建成功！授权码: <b>${result.license_key}</b>`);
+                        this.reset();
+                        loadAllLicenses();
+                    } else {
+                        const error = await resp.json();
+                        showAlert('danger', error.error || '创建授权失败');
+                    }
+                } catch (e) {
+                    showAlert('danger', '网络错误，创建授权失败');
+                }
+            });
+            document.getElementById('createSoftwareForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                createSoftware();
+            });
+            document.getElementById('globalSearch').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') globalSearch();
+            });
+        };
+    </script>
+</body>
+</html>

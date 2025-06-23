@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>登录 - 授权管理系统</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at 60% 40%, #4cc9f0 0, #4361ee 40%, #3f37c9 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+        .login-card {
+            background: rgba(255,255,255,0.97);
+            border-radius: 22px;
+            box-shadow: 0 8px 32px 0 rgba(31,38,135,0.24);
+            padding: 2.5rem 2rem 2rem 2rem;
+            width: 350px;
+            max-width: 95vw;
+            position: relative;
+        }
+        .login-card h2 {
+            font-weight: 700;
+            text-align: center;
+            color: #3f37c9;
+            margin-bottom: 1.8rem;
+            letter-spacing: 2px;
+        }
+        .login-card label {
+            font-weight: 600;
+            color: #3f37c9;
+            letter-spacing: 1px;
+        }
+        .login-card input {
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            padding: 0.8rem 1rem;
+            margin-bottom: 1rem;
+            width: 100%;
+            font-size: 1.1rem;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        .login-card input:focus {
+            border-color: #4361ee;
+        }
+        .login-card button {
+            width: 100%;
+            background: linear-gradient(90deg,#4361ee 0%, #4cc9f0 100%);
+            border: none;
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 12px;
+            padding: 0.8rem 0;
+            margin-top: 0.4rem;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: background 0.2s;
+            box-shadow: 0 2px 12px rgba(67,97,238,0.08);
+        }
+        .login-card button:hover {
+            background: linear-gradient(90deg,#4cc9f0 0%, #4361ee 100%);
+        }
+        .login-card .logo {
+            width: 56px;
+            display: block;
+            margin: 0 auto 1.3rem auto;
+        }
+        .alert {
+            border-radius: 10px;
+            padding: 0.7rem 1rem;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+        .alert-danger {
+            background: #fff4f4;
+            color: #dc3545;
+            border: 1px solid #f5c2c7;
+        }
+    </style>
+</head>
+<body>
+    <form class="login-card" method="POST" autocomplete="off">
+        <img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f512.png" class="logo" alt="logo">
+        <h2>授权管理系统</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{category}}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+        <label>用户名</label>
+        <input name="username" type="text" required placeholder="请输入用户名" autofocus>
+        <label>密码</label>
+        <input name="password" type="password" required placeholder="请输入密码">
+        <button type="submit">登录</button>
+    </form>
+</body>
+</html>
