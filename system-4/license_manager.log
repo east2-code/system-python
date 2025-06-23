@@ -1,0 +1,23 @@
+2025-06-23 18:29:08,609 - LicenseManager - INFO - Using encryption key from file.
+2025-06-23 18:29:08,717 - LicenseManager - INFO - Starting license manager server
+2025-06-23 18:29:08,728 - LicenseManager - INFO - Database tables created/updated
+2025-06-23 18:29:08,760 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.102:5000
+2025-06-23 18:29:08,761 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-06-23 18:29:08,763 - werkzeug - INFO -  * Restarting with stat
+2025-06-23 18:29:09,341 - LicenseManager - INFO - Using encryption key from file.
+2025-06-23 18:29:09,432 - LicenseManager - INFO - Starting license manager server
+2025-06-23 18:29:09,437 - LicenseManager - INFO - Database tables created/updated
+2025-06-23 18:29:09,468 - werkzeug - WARNING -  * Debugger is active!
+2025-06-23 18:29:09,503 - werkzeug - INFO -  * Debugger PIN: 527-932-078
+2025-06-23 18:29:10,686 - werkzeug - INFO - 127.0.0.1 - - [23/Jun/2025 18:29:10] "[32mGET / HTTP/1.1[0m" 302 -
+2025-06-23 18:29:10,719 - werkzeug - INFO - 127.0.0.1 - - [23/Jun/2025 18:29:10] "GET /login HTTP/1.1" 200 -
+2025-06-23 18:29:20,401 - werkzeug - INFO - 127.0.0.1 - - [23/Jun/2025 18:29:20] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-06-23 18:29:20,721 - werkzeug - INFO - 127.0.0.1 - - [23/Jun/2025 18:29:20] "GET / HTTP/1.1" 200 -
+2025-06-23 18:29:21,115 - werkzeug - INFO - 127.0.0.1 - - [23/Jun/2025 18:29:21] "GET /api/software HTTP/1.1" 200 -
+2025-06-23 18:29:21,136 - LicenseManager - ERROR - Decryption failed: 
+2025-06-23 18:29:21,142 - werkzeug - INFO - 127.0.0.1 - - [23/Jun/2025 18:29:21] "GET /api/all-licenses?page=1 HTTP/1.1" 200 -
+2025-06-23 18:29:21,367 - LicenseManager - ERROR - Decryption failed: 
+2025-06-23 18:29:21,372 - werkzeug - INFO - 127.0.0.1 - - [23/Jun/2025 18:29:21] "GET /api/all-licenses?page=1&per_page=1000 HTTP/1.1" 200 -
